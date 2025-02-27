@@ -41,16 +41,24 @@ export function PostsAll() {
 
   const fetchPosts = async () => {
     try {
-      const response = await API.get("/posts")
-      setPosts(response.data)
+      const response = await API.get("/posts");
+  
+      // 🔥 Foydalanuvchi qaysi postlarga like bosganini tekshiramiz
+      const updatedPosts = response.data.map((post) => ({
+        ...post,
+        isLiked: post.likes?.some((like) => like.userId === user?.id), // Foydalanuvchi like bosgan bo‘lsa true
+      }));
+  
+      setPosts(updatedPosts);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to fetch posts",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
+  
 
   const handleCommentClick = (postId) => {
     setActivePostId(activePostId === postId ? null : postId)
@@ -104,35 +112,50 @@ export function PostsAll() {
       })
     }
   }
+
+
+  
+
+
   const favHandler = async (postId, isLiked) => {
     if (!user) {
-      router.push("/register")
-      return
+      router.push("/register");
+      return;
     }
-
+  
+    // 1️⃣ Optimistik UI yangilash (bekend javobini kutmasdan)
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? { ...post, isLiked: !isLiked, likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1 }
+          : post
+      )
+    );
+  
     try {
       if (isLiked) {
-        await API.delete(`/likes/${user.id}/${postId}`)
+        await API.delete(`/likes/${user.id}/${postId}`);
       } else {
-        await API.post(`/likes/${user.id}/${postId}`, {})
+        await API.post(`/likes/${user.id}/${postId}`, {});
       }
-
-      // Like tugmasini bosganda UI-ni yangilaymiz
-      setPosts(
-        posts.map((post) =>
-          post.id === postId
-            ? { ...post, isLiked: !isLiked, likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1 }
-            : post,
-        ),
-      )
     } catch (error) {
+      // 🔥 Xatolik bo‘lsa avvalgi holatga qaytarish
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? { ...post, isLiked, likes_count: isLiked ? post.likes_count + 1 : post.likes_count - 1 } // Avvalgi qiymatni qaytarish
+            : post
+        )
+      );
+  
       toast({
         title: "Error",
         description: "Failed to update like",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
+  
 
   return (
     <div className="container mx-auto p-4 max-w-md">

@@ -29,7 +29,7 @@ export default function LoginPage() {
       localStorage.setItem("token", token);
 
       toast.success("Login successful!");
-      router.push("/dashboard"); // Dashboard sahifasiga yo‘naltirish
+      router.push("/"); // Dashboard sahifasiga yo‘naltirish
     } catch (error) {
       toast.error("Invalid credentials!");
       console.error("Login error:", error);

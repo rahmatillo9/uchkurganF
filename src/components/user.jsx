@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import API from "@/lib/axios"
 import { jwtDecode } from "jwt-decode"
-import { Check, LogOut, Heart, MessageCircle, Eye } from "lucide-react"
+import { Check, LogOut, Heart, MessageCircle, Eye, Trash, Edit,  } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -49,6 +49,34 @@ export default function ProfilePage() {
 
     fetchData()
   }, [])
+ 
+  const deletePost = async (postId) => {
+    if (!window.confirm("Rostan ham bu postni o‘chirmoqchimisiz?")) return;
+  
+    try {
+      // 🔥 Optimistik UI: Postni vaqtincha olib tashlaymiz
+      const prevPosts = [...posts];
+      setPosts(posts.filter((post) => post.id !== postId));
+  
+      // 🛠️ Serverdan o‘chirish
+      await API.delete(`/posts/${postId}`);
+  
+      toast({
+        title: "Success",
+        description: "Post muvaffaqiyatli o‘chirildi",
+      });
+    } catch (error) {
+      // ❌ Xatolik bo‘lsa, avvalgi holatni tiklash
+      setPosts(prevPosts);
+  
+      toast({
+        title: "Error",
+        description: "Postni o‘chirishda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    }
+  };
+  
 
   const logout = () => {
     localStorage.removeItem("token")
@@ -140,6 +168,7 @@ export default function ProfilePage() {
       {/* Profile Header */}
       <div className="p-4 space-y-4">
         <div className="flex items-start justify-between">
+    
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20 rounded-full">
               {profileImage ? (
@@ -190,8 +219,11 @@ export default function ProfilePage() {
       {/* Posts */}
       <div className="container mx-auto p-4 max-w-md">
         {posts.map((post) => (
+          
           <Card key={post.id} className="mb-4">
+             
             <CardHeader className="flex items-center space-x-4">
+          
               <Avatar>
                 <AvatarImage src={profileImage} />
                 <AvatarFallback>{userData?.nickname[0]}</AvatarFallback>
@@ -209,6 +241,31 @@ export default function ProfilePage() {
               )}
             </CardContent>
             <CardFooter className="flex justify-between">
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <span className="sr-only">Open menu</span>
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                  />
+                </svg>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => deletePost(post.id)}>
+              <Trash className="text-red-500"/>
+                postni o`chirish
+              </DropdownMenuItem>
+              <DropdownMenuItem >
+                <Edit className="mr-2 h-4 w-4" />
+                postni tahrirlash
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
               <Button onClick={() => favHandler(post.id, post.isLiked)} variant="ghost" size="sm">
                 <Heart className={`mr-2 h-4 w-4 ${post.isLiked ? "text-red-500 fill-red-500" : ""}`} />
                 {post.likes_count}
