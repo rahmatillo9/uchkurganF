@@ -7,19 +7,20 @@ import { ModeToggle } from "./darck-mode"
 export default function Navbar() {
   const router = useRouter()
   return (
-    <header className="fixed top-0 left-0 right-0 bg-black px-4 py-2 flex items-center justify-between z-50">
+    <header className="fixed top-0 left-0 right-0 bg-black px-4 py-2 flex items-center justify-between z-50 dark:bg-gray-900">
       {/* Instagram Logo */}
       <div className="flex-1">
         <h1 className="text-white font-['Instagram Sans Script'] text-2xl">Tasvirchi</h1>
       </div>
-      <ModeToggle/>
+     
      
 
       {/* Notification Icons */}
       <div className="flex items-center gap-4">
-        <button className="relative text-white" aria-label="Likes" onClick={() => router.push('/likes')}>
+        {/* <button className="relative text-white" aria-label="Likes" onClick={() => router.push('/likes')}>
           <Heart className="w-7 h-7" />
-        </button>
+        </button> */}
+         <ModeToggle/>
         <button className="relative text-white" aria-label="Messages" onClick={() => router.push('/messegs')}>
 
           <MessageCircle className="w-7 h-7" />
@@ -31,4 +32,3 @@ export default function Navbar() {
     </header>
   )
 }
-

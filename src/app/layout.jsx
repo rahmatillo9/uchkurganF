@@ -1,10 +1,10 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/theme-provider";
-import Navbar from "@/components/navbar";
 import { SidebarProvider } from "@/context/SidebarContext";
-import Footer from "@/components/footer";
 import { Toaster } from "@/components/ui/toaster";
+import Footer from "@/components/mobilNavigation";
+import Navbar from "@/components/navbar";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -38,11 +38,11 @@ export default function RootLayout({ children }) {
          
           <SidebarProvider>
             <Navbar/>
-            <main className="flex-grow pt-[60px] pb-[60px]">{children}</main>
-            <Toaster />
-          <Footer />
+            <main className="flex-grow pt-[50px] pb-[60px]">{children}</main>
+            <Footer/>
+            <Toaster richColors position="top-right" />
           </SidebarProvider>
-         
+            
         </ThemeProvider>
       </body>
     </html>

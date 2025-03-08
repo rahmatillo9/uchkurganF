@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { Home, Search, PlusSquare,  User, Image } from "lucide-react"
+import { Home, Search, PlusSquare,  User, Heart } from "lucide-react"
 import Link from "next/link"
 
 export default function Footer() {
@@ -9,10 +9,10 @@ export default function Footer() {
   const pathname = usePathname()
 
   const navItems = [
-    { icon: Home, label: "Home", href: "/" },
-    { icon: Search, label: "Search", href: "/search" },
-    { icon: PlusSquare, label: "Create", href: "/create" },
-    { icon: Image, label: "Images", href: "/posts" },
+    { icon: Home, label: "Bosh sahifa", href: "/" },
+    { icon: Search, label: "Qidiruv", href: "/search" },
+    { icon: PlusSquare, label: "Post qo`shish", href: "/create" },
+    // { icon: Heart, label: "likes", href: "/likes" },
     { icon: User, label: "Profile", href: "/profile" },
   ]
 
@@ -48,4 +48,3 @@ export default function Footer() {
     </nav>
   )
 }
-
