@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://192.168.1.61:4000', // yoki sizning server manzilingiz
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}`, // yoki sizning server manzilingiz
 });
 
 API.interceptors.request.use((config) => {
