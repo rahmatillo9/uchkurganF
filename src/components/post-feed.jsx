@@ -23,13 +23,31 @@ const PostFeed = () => {
   const [selectedImage, setSelectedImage] = useState(null)
   const [userId, setUserId] = useState(null)
   const router = useRouter()
+  
+  // Properly call useAuth
+ useAuth
 
   const { ref, inView } = useInView({
     threshold: 0,
   })
 
+  // Move sendNotification inside component to access posts state
+  const sendNotification = async (type, postId = null, recipientId = null) => {
+    try {
+      const currentUserId = localStorage.getItem("userId");
+      const notificationData = {
+        user_id: recipientId || posts.find(p => p.id === postId)?.user?.id,
+        from_user_id: currentUserId,
+        type: type,
+        ...(postId && { post_id: postId })
+      };
+      
+      await API.post("/notifications", notificationData);
+    } catch (error) {
+      console.error("Notifikatsiya yuborishda xatolik:", error);
+    }
+  };
 
-  useAuth
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
@@ -48,17 +66,23 @@ const PostFeed = () => {
 
   const fetchPosts = useCallback(async () => {
     if (loading || !hasMore || !userId) return
+
     setLoading(true)
     try {
       const response = await API.get(`/posts/random?page=${page}`)
       const newPosts = response.data
+
+      if (!newPosts || newPosts.length === 0) {
+        setHasMore(false)
+        return
+      }
 
       const postsWithDetails = await Promise.all(
         newPosts.map(async (post) => {
           const [likeResponse, bookmarkResponse, followResponse] = await Promise.all([
             API.get(`/likes/user/${userId}/post/${post.id}`),
             API.get(`/saved-posts/user/${userId}/post/${post.id}`),
-            API.get(`/followers/check?follower_id=${userId}&following_id=${post.user.id}`),
+            API.get(`/followers/check?follower_id=${userId}&following_id=${post.user?.id}`),
           ])
           return {
             ...post,
@@ -71,19 +95,15 @@ const PostFeed = () => {
               isFollowing: followResponse.data.isFollowing,
             },
           }
-        }),
+        })
       )
 
-      if (postsWithDetails.length === 0) {
-        setHasMore(false)
-      } else {
-        setPosts((prevPosts) => {
-          const existingIds = new Set(prevPosts.map((post) => post.id))
-          const filteredNewPosts = postsWithDetails.filter((post) => !existingIds.has(post.id))
-          return [...prevPosts, ...filteredNewPosts]
-        })
-        setPage((prevPage) => prevPage + 1)
-      }
+      setPosts((prevPosts) => {
+        const existingIds = new Set(prevPosts.map((post) => post.id))
+        const filteredNewPosts = postsWithDetails.filter((post) => !existingIds.has(post.id))
+        return [...prevPosts, ...filteredNewPosts]
+      })
+      setPage((prevPage) => prevPage + 1)
     } catch (error) {
       console.error("Postlarni yuklashda xatolik:", error)
     } finally {
@@ -92,62 +112,70 @@ const PostFeed = () => {
   }, [loading, hasMore, userId, page])
 
   useEffect(() => {
-    if (inView && userId) {
+    if (inView && hasMore && !loading && userId) {
       fetchPosts()
     }
-  }, [inView, userId, fetchPosts])
+  }, [inView, hasMore, loading, userId, fetchPosts])
 
   const handleLike = async (postId) => {
     try {
-      const currentUserId = localStorage.getItem("userId")
-      const post = posts.find((p) => p.id === postId)
+      const currentUserId = localStorage.getItem("userId");
+      const post = posts.find((p) => p.id === postId);
 
-      if (post.hasLiked) {
-         await API.post("/likes", { userId: currentUserId, postId })
-      } else {
-        await API.post("/likes", { userId: currentUserId, postId })
+      if (!post) return;
+
+      await API.post("/likes", { userId: currentUserId, postId });
+
+      if (!post.hasLiked) {
+        await sendNotification('like', postId);
       }
 
-      const updatedPosts = posts.map((post) =>
-        post.id === postId
+      const updatedPosts = posts.map((p) =>
+        p.id === postId
           ? {
-              ...post,
-              hasLiked: !post.hasLiked,
-              likesCount: post.hasLiked ? post.likesCount - 1 : post.likesCount + 1,
+              ...p,
+              hasLiked: !p.hasLiked,
+              likesCount: p.hasLiked ? p.likesCount - 1 : p.likesCount + 1,
             }
-          : post,
-      )
-      setPosts(updatedPosts)
+          : p
+      );
+      setPosts(updatedPosts);
     } catch (error) {
-      console.error("Like qo'yishda xatolik:", error)
+      console.error("Like qo'yishda xatolik:", error);
     }
-  }
+  };
 
   const handleFollow = async (followingId) => {
     try {
-      const followerId = localStorage.getItem("userId")
+      const followerId = localStorage.getItem("userId");
       await API.post("/followers/toggle", {
         follower_id: followerId,
         following_id: followingId,
-      })
+      });
 
-      const updatedPosts = posts.map((post) => {
-        if (post.user.id === followingId) {
-          return {
-            ...post,
-            user: {
-              ...post.user,
-              isFollowing: !post.user.isFollowing,
-            },
+      const updatedPosts = await Promise.all(
+        posts.map(async (post) => {
+          if (post.user?.id === followingId) {
+            const isNowFollowing = !post.user.isFollowing;
+            if (isNowFollowing) {
+              await sendNotification('follow', null, followingId);
+            }
+            return {
+              ...post,
+              user: {
+                ...post.user,
+                isFollowing: isNowFollowing,
+              },
+            };
           }
-        }
-        return post
-      })
-      setPosts(updatedPosts)
+          return post;
+        })
+      );
+      setPosts(updatedPosts);
     } catch (error) {
-      console.error("Follow/Unfollow qilishda xatolik:", error)
+      console.error("Follow/Unfollow qilishda xatolik:", error);
     }
-  }
+  };
 
   const handleCommentClick = (postId) => {
     router.push(`/post/${postId}`)
@@ -158,13 +186,17 @@ const PostFeed = () => {
       const currentUserId = localStorage.getItem("userId")
       const post = posts.find((p) => p.id === postId)
 
+      if (!post) return;
+
       if (post.saved) {
         await API.delete(`/saved-posts/unsave/${currentUserId}/${postId}`)
       } else {
         await API.post("/saved-posts/save", { user_id: currentUserId, post_id: postId })
       }
 
-      const updatedPosts = posts.map((post) => (post.id === postId ? { ...post, saved: !post.saved } : post))
+      const updatedPosts = posts.map((p) => 
+        p.id === postId ? { ...p, saved: !p.saved } : p
+      )
       setPosts(updatedPosts)
     } catch (error) {
       console.error("Bookmark qilishda xatolik:", error)
@@ -177,30 +209,30 @@ const PostFeed = () => {
         <Card key={post.id} className="border border-gray-800 max-w-2xl mx-auto mb-4 rounded-lg">
           <CardHeader className="flex flex-row items-center justify-between p-4">
             <div className="flex items-center space-x-4">
-              <Avatar className="w-12 h-12 rounded-full" onClick={() => router.push(`/userProfile/${post.user.id}`)}>
+              <Avatar className="w-12 h-12 rounded-full" onClick={() => router.push(`/userProfile/${post.user?.id}`)}>
                 <AvatarImage
                   src={
-                    post.user.profile_image
+                    post.user?.profile_image
                       ? `${process.env.NEXT_PUBLIC_API_URL}${post.user.profile_image}`
                       : "/placeholder-avatar.png"
                   }
-                  alt={post.user.username}
+                  alt={post.user?.username || "User"}
                   className="object-cover w-full h-full rounded-full"
                 />
                 <AvatarFallback className="rounded-full flex items-center justify-center w-full h-full">
-                  {post.user.username?.[0]}
+                  {post.user?.username?.[0] || "U"}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="font-semibold">{post.user.username}</h3>
-                  {post.user.id !== userId && (
+                  <h3 className="font-semibold">{post.user?.username || "Unknown"}</h3>
+                  {post.user?.id !== userId && (
                     <Button
                       variant="link"
-                      className={post.user.isFollowing ? "text-gray-500 p-0" : "text-blue-500 p-0"}
-                      onClick={() => handleFollow(post.user.id)}
+                      className={post.user?.isFollowing ? "text-gray-500 p-0" : "text-blue-500 p-0"}
+                      onClick={() => handleFollow(post.user?.id)}
                     >
-                      {post.user.isFollowing ? "Obunani bekor qilish" : "Obuna bo`lish"}
+                      {post.user?.isFollowing ? "Obunani bekor qilish" : "Obuna bo`lish"}
                     </Button>
                   )}
                 </div>
@@ -212,6 +244,7 @@ const PostFeed = () => {
             </Button>
           </CardHeader>
 
+          {/* Rest of the JSX remains the same */}
           <CardContent className="p-0">
             <Carousel className="w-full h-auto overflow-hidden">
               <CarouselContent>
@@ -267,7 +300,7 @@ const PostFeed = () => {
             <div className="space-y-2 w-full">
               <p className="font-semibold">{post.likesCount} likes</p>
               <p>
-                <span className="font-semibold">{post.user.username}</span> {post.caption}
+                <span className="font-semibold">{post.user?.username || "Unknown"}</span> {post.caption}
               </p>
               {post.commentsCount > 0 && (
                 <Button variant="link" className="p-0" onClick={() => router.push(`/post/${post.id}`)}>
@@ -279,9 +312,9 @@ const PostFeed = () => {
         </Card>
       ))}
       {loading && <div className="text-center py-4">Yuklanmoqda...</div>}
-      {!hasMore && <div className="text-center py-4">Boshqa post yo'q</div>}
-      <div ref={ref} className="h-10" />
-
+      {!hasMore && posts.length > 0 && <div className="text-center py-4">Boshqa post yo'q</div>}
+      {posts.length === 0 && !loading && <div className="text-center py-4">Hech qanday post topilmadi</div>}
+      {hasMore && <div ref={ref} className="h-10" />}
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
         <DialogContent className="max-w-full h-full p-0 border-none">
           <VisuallyHidden>
@@ -307,4 +340,3 @@ const PostFeed = () => {
 }
 
 export default PostFeed
-

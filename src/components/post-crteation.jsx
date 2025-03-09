@@ -202,7 +202,7 @@ const PostCreation = () => {
                 </Button>
               </label>
               <Button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push("/profile")}
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300"
               >
                 Tugatish

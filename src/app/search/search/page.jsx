@@ -26,23 +26,19 @@ export default function SearchPosts() {
     threshold: 0,
   })
 
-  // Qidiruv so'zini olish
   const query = searchParams.get("query")
 
-
-  useAuth
+  const { user } = useAuth() // Properly call useAuth
 
   useEffect(() => {
     const token = localStorage.getItem("token")
-
     if (token) {
       try {
         const decodedToken = jwtDecode(token)
- 
         setUserId(decodedToken.id)
         localStorage.setItem("userId", decodedToken.id)
       } catch (error) {
-   
+        console.error("Token dekodlashda xatolik:", error)
         router.push("/login")
       }
     } else {
@@ -50,8 +46,26 @@ export default function SearchPosts() {
     }
   }, [router])
 
+  const sendNotification = async (type, postId) => {
+    try {
+      const currentUserId = localStorage.getItem("userId");
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+
+      const notificationData = {
+        user_id: post.user.id, // recipient (post owner)
+        from_user_id: currentUserId, // sender
+        type: type, // 'like'
+        post_id: postId
+      };
+      
+      await API.post("/notifications", notificationData);
+    } catch (error) {
+      console.error("Notifikatsiya yuborishda xatolik:", error);
+    }
+  };
+
   const fetchPosts = async () => {
-   
     if (!hasMore || !userId) return
     setLoading(true)
     try {
@@ -59,16 +73,12 @@ export default function SearchPosts() {
         ? `/posts/search?query=${encodeURIComponent(query)}&page=${page}`
         : `/posts/random?page=${page}`
 
-
       const response = await API.get(apiUrl)
-  
 
-      // API'dan qaytgan ma'lumotni tekshirish
       let newPosts = response.data
       if (Array.isArray(newPosts)) {
-        // Agar to'g'ri massiv bo'lsa, ishlatamiz
+        // Direct array
       } else if (response.data.rows && Array.isArray(response.data.rows)) {
-        // Agar { rows: [...] } formatida bo'lsa, rows ni olamiz
         newPosts = response.data.rows
       } else {
         console.error("API javobi noto'g'ri formatda:", response.data)
@@ -112,7 +122,6 @@ export default function SearchPosts() {
   }
 
   useEffect(() => {
-
     setPage(1)
     setPosts([])
     setHasMore(true)
@@ -122,7 +131,6 @@ export default function SearchPosts() {
   }, [userId, query])
 
   useEffect(() => {
-
     if (inView && userId) {
       fetchPosts()
     }
@@ -133,10 +141,16 @@ export default function SearchPosts() {
       const currentUserId = localStorage.getItem("userId")
       const post = posts.find((p) => p.id === postId)
 
+      if (!post) return;
+
       if (post.hasLiked) {
         await API.delete(`/likes/${postId}/${currentUserId}`)
       } else {
         await API.post("/likes", { userId: currentUserId, postId })
+        // Send notification only when liking (not unliking)
+        if (!post.hasLiked && post.user.id !== currentUserId) { // Don't notify if liking own post
+          await sendNotification('like', postId)
+        }
       }
 
       const updatedPosts = posts.map((post) =>
@@ -158,6 +172,8 @@ export default function SearchPosts() {
     try {
       const currentUserId = localStorage.getItem("userId")
       const post = posts.find((p) => p.id === postId)
+
+      if (!post) return;
 
       if (post.saved) {
         await API.delete(`/saved-posts/unsave/${currentUserId}/${postId}`)
@@ -188,8 +204,8 @@ export default function SearchPosts() {
 
       {posts.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-xl  mb-4">Hech narsa topilmadi</p>
-          <p className="">
+          <p className="text-xl mb-4">Hech narsa topilmadi</p>
+          <p>
             {query
               ? `"${query}" bo'yicha mos keluvchi postlar mavjud emas. Iltimos, boshqa so'z bilan qidiring.`
               : "Hozircha postlar mavjud emas."}
@@ -201,20 +217,20 @@ export default function SearchPosts() {
             <Card key={post.id} className="border border-gray-800 max-w-2xl mx-auto mb-4 rounded-lg">
               <CardHeader className="flex flex-row items-center justify-between p-4">
                 <div className="flex items-center space-x-4">
-                <Avatar className="w-12 h-12 rounded-full" onClick={() => router.push(`/userProfile/${post.user.id}`)}>
-  <AvatarImage
-    src={
-      post.user.profile_image
-        ? `${process.env.NEXT_PUBLIC_API_URL}${post.user.profile_image}`
-        : "/placeholder-avatar.png"
-    }
-    alt={post.user.username}
-    className="object-cover w-full h-full rounded-full"
-  />
-  <AvatarFallback className="rounded-full flex items-center justify-center w-full h-full">
-    {post.user.username?.[0]}
-  </AvatarFallback>
-</Avatar>
+                  <Avatar className="w-12 h-12 rounded-full" onClick={() => router.push(`/userProfile/${post.user.id}`)}>
+                    <AvatarImage
+                      src={
+                        post.user.profile_image
+                          ? `${process.env.NEXT_PUBLIC_API_URL}${post.user.profile_image}`
+                          : "/placeholder-avatar.png"
+                      }
+                      alt={post.user.username}
+                      className="object-cover w-full h-full rounded-full"
+                    />
+                    <AvatarFallback className="rounded-full flex items-center justify-center w-full h-full">
+                      {post.user.username?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <h3 className="font-semibold">{post.user.username}</h3>
                     <p className="text-sm">{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</p>

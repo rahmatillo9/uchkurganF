@@ -22,8 +22,8 @@ const PostDetail = ({ postId }) => {
   const [isLiked, setIsLiked] = useState(false)
   const router = useRouter()
 
+ useAuth
 
-  useAuth
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
@@ -39,78 +39,125 @@ const PostDetail = ({ postId }) => {
     }
   }, [router])
 
+  const sendNotification = async (type, recipientId, postId = null) => {
+    try {
+      const currentUserId = localStorage.getItem("userId");
+      const notificationData = {
+        user_id: recipientId, // recipient
+        from_user_id: currentUserId, // sender
+        type: type, // 'like', 'follow', or 'comment'
+        ...(postId && { post_id: postId }) // include post_id for like and comment notifications
+      };
+      
+      await API.post("/notifications", notificationData);
+    } catch (error) {
+      console.error("Notifikatsiya yuborishda xatolik:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchPostAndComments = async () => {
       try {
         const [postResponse, commentsResponse] = await Promise.all([
           API.get(`/posts/${postId}`),
           API.get(`/comments/post/${postId}`),
-        ])
-        setPost(postResponse.data)
-        setComments(commentsResponse.data)
-        if (postResponse.data.user.followers) {
-          setIsFollowing(postResponse.data.user.followers.some((follower) => follower.id === userId))
-        }
-        if (postResponse.data.likes) {
-          setIsLiked(postResponse.data.likes.some((like) => like.userId === userId))
+        ]);
+
+        const postData = postResponse.data;
+        setPost(postData);
+        setComments(commentsResponse.data);
+        setIsLiked(postData.likes?.some((like) => like.userId === userId));
+
+        if (postData.user?.id) {
+          const followResponse = await API.get(
+            `/followers/check?follower_id=${userId}&following_id=${postData.user.id}`
+          );
+          setIsFollowing(followResponse.data.isFollowing);
+          
+          setPost(prevPost => ({
+            ...prevPost,
+            user: {
+              ...prevPost.user,
+              isFollowing: followResponse.data.isFollowing
+            }
+          }));
         }
       } catch (error) {
-        console.error("Ma'lumotlarni yuklashda xatolik:", error)
+        console.error("Ma'lumotlarni yuklashda xatolik:", error);
       }
-    }
+    };
 
     if (postId && userId) {
-      fetchPostAndComments()
+      fetchPostAndComments();
     }
-  }, [postId, userId])
+  }, [postId, userId, router]);
 
   const handleFollow = async () => {
+    if (!post?.user?.id) return;
+    
     try {
-      const followerId = userId
-      const followingId = post.user.id
+      const followerId = userId;
+      const followingId = post.user.id;
 
-      if (isFollowing) {
-        await API.delete(`/followers/unfollow/${followerId}/${followingId}`)
-      } else {
-        await API.post("/followers/follow", {
-          follower_id: followerId,
-          following_id: followingId,
-        })
+      await API.post("/followers/toggle", {
+        follower_id: followerId,
+        following_id: followingId,
+      });
+
+      const wasFollowing = isFollowing;
+      setIsFollowing(!isFollowing);
+      
+      if (!wasFollowing) {
+        await sendNotification('follow', followingId);
       }
-      setIsFollowing(!isFollowing)
+
+      setPost(prevPost => ({
+        ...prevPost,
+        user: {
+          ...prevPost.user,
+          followers: isFollowing
+            ? prevPost.user.followers.filter(f => f.id !== followerId)
+            : [...(prevPost.user.followers || []), { id: followerId }]
+        }
+      }));
     } catch (error) {
-      console.error("Obuna bo'lishda xatolik:", error)
+      console.error("Follow/Unfollow qilishda xatolik:", error);
+      setIsFollowing(isFollowing);
     }
-  }
+  };
 
   const handleLike = async () => {
     try {
       if (isLiked) {
-        await API.delete(`/likes/${postId}/${userId}`)
+        await API.delete(`/likes/${postId}/${userId}`);
       } else {
-        await API.post("/likes", { userId, postId })
+        await API.post("/likes", { userId, postId });
+        await sendNotification('like', post.user.id, postId);
       }
-      setIsLiked(!isLiked)
+      
+      setIsLiked(!isLiked);
       const updatedPost = {
         ...post,
-        likes: isLiked ? post.likes.filter((like) => like.userId !== userId) : [...post.likes, { userId }],
-      }
-      setPost(updatedPost)
+        likes: isLiked 
+          ? post.likes.filter((like) => like.userId !== userId) 
+          : [...post.likes, { userId }],
+      };
+      setPost(updatedPost);
     } catch (error) {
-      console.error("Like qo'yishda xatolik:", error)
+      console.error("Like qo'yishda xatolik:", error);
     }
-  }
+  };
 
   const handleComment = async (e) => {
-    e.preventDefault()
-    if (!newComment.trim()) return
+    e.preventDefault();
+    if (!newComment.trim()) return;
 
     try {
       const response = await API.post("/comments", {
         user_id: userId,
         post_id: postId,
         content: newComment,
-      })
+      });
 
       const newCommentWithUser = {
         ...response.data,
@@ -119,15 +166,21 @@ const PostDetail = ({ postId }) => {
           username: localStorage.getItem("username"),
           profile_image: localStorage.getItem("profile_image"),
         },
+      };
+      
+      setComments([...comments, newCommentWithUser]);
+      setNewComment("");
+      
+      // Send notification to post owner
+      if (post.user.id !== userId) { // Don't send notification if commenting on own post
+        await sendNotification('comment', post.user.id, postId);
       }
-      setComments([...comments, newCommentWithUser])
-      setNewComment("")
     } catch (error) {
-      console.error("Kommentariya qo'shishda xatolik:", error)
+      console.error("Kommentariya qo'shishda xatolik:", error);
     }
-  }
+  };
 
-  if (!post) return null
+  if (!post) return null;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -145,24 +198,23 @@ const PostDetail = ({ postId }) => {
       </div>
 
       {/* Post Content */}
-      <div className="max-w-2xl mx-auto pb-16"> {/* pb-20 ni pb-16 ga o'zgartirdim, footer uchun joy qoldirish uchun */}
-        {/* User Info */}
+      <div className="max-w-2xl mx-auto pb-16">
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-          <Avatar className="w-12 h-12 rounded-full" onClick={() => router.push(`/userProfile/${post.user.id}`)}>
-  <AvatarImage
-    src={
-      post.user.profile_image
-        ? `${process.env.NEXT_PUBLIC_API_URL}${post.user.profile_image}`
-        : "/placeholder-avatar.png"
-    }
-    alt={post.user.username}
-    className="object-cover w-full h-full rounded-full"
-  />
-  <AvatarFallback className="rounded-full flex items-center justify-center w-full h-full">
-    {post.user.username?.[0]}
-  </AvatarFallback>
-</Avatar>
+            <Avatar className="w-12 h-12 rounded-full" onClick={() => router.push(`/userProfile/${post.user.id}`)}>
+              <AvatarImage
+                src={
+                  post.user.profile_image
+                    ? `${process.env.NEXT_PUBLIC_API_URL}${post.user.profile_image}`
+                    : "/placeholder-avatar.png"
+                }
+                alt={post.user.username}
+                className="object-cover w-full h-full rounded-full"
+              />
+              <AvatarFallback className="rounded-full flex items-center justify-center w-full h-full">
+                {post.user.username?.[0]}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <div className="flex items-center space-x-2">
                 <p className="font-semibold">{post.user.username}</p>
@@ -176,22 +228,20 @@ const PostDetail = ({ postId }) => {
           </div>
           {post.user.id !== userId && (
             <Button
-              variant={isFollowing ? "outline" : "default"}
+              variant="link"
+              className={isFollowing ? "text-gray-500 p-0" : "text-blue-500 p-0"}
               onClick={handleFollow}
-              className={isFollowing ? "text-white border-gray-600" : "bg-blue-500 hover:bg-blue-600"}
-              size="sm"
             >
-              {isFollowing ? "Following" : "Follow"}
+              {isFollowing ? "Bekor qilish" : "Obuna bo`lish"}
             </Button>
           )}
         </div>
 
-        {/* Post Caption */}
+        {/* Rest of the JSX remains unchanged */}
         <div className="px-4 py-2">
           <p className="whitespace-pre-wrap">{post.caption}</p>
         </div>
 
-        {/* Images */}
         <div className="mt-4">
           <Carousel className="w-full">
             <CarouselContent>
@@ -216,7 +266,6 @@ const PostDetail = ({ postId }) => {
           </Carousel>
         </div>
 
-        {/* Engagement */}
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <div className="flex space-x-4">
@@ -240,12 +289,15 @@ const PostDetail = ({ postId }) => {
 
         <Separator className="bg-gray-800" />
 
-        {/* Comments */}
         <div className="py-2">
           {comments.map((comment) => (
             <div key={comment.id} className="px-4 py-3 flex items-start space-x-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={comment.user?.profile_image || "/placeholder-avatar.png"} />
+                <AvatarImage   src={
+                comment.user?.profile_image 
+                    ? `${process.env.NEXT_PUBLIC_API_URL}${comment.user?.profile_image }`
+                    : "/placeholder-avatar.png"
+                }/>
                 <AvatarFallback>{comment.user?.username?.[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1 space-y-1">
@@ -262,7 +314,6 @@ const PostDetail = ({ postId }) => {
         </div>
       </div>
 
-      {/* Comment Input - Footer ustida, lekin fixed holda pastki qismda */}
       <div className="fixed bottom-16 left-0 right-0 bg-black border-t border-gray-800 p-4 z-40">
         <form onSubmit={handleComment} className="flex items-center space-x-3 max-w-2xl mx-auto">
           <Avatar className="w-8 h-8">

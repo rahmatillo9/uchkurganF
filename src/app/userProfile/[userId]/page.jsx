@@ -8,6 +8,7 @@ import UserProfileHeader from "@/components/profile2/UserProfileHeader";
 import UserProfileTabs from "@/components/profile2/UserProfileTabs";
 import API from "@/lib/axios";
 import { toast } from "sonner";
+import useAuth from "@/components/useAuth";
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function UserProfilePage() {
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
-
+  useAuth
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {

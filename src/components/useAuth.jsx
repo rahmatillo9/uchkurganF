@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { useRouter } from "next/router";
+
 import {jwtDecode} from "jwt-decode";
+import { useRouter } from "next/navigation";
 
 const useAuth = () => {
   const router = useRouter();

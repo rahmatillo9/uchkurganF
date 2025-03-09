@@ -34,14 +34,14 @@ export default function UserList({ users, currentUserId, following, handleFollow
                 <p className="text-sm text-gray-500">{user.bio || "Bio mavjud emas"}</p>
               </div>
             </div>
-            {user.id !== currentUserId && (
+            {/* {user.id !== currentUserId && (
               <Button
                 variant="outline"
                 onClick={() => handleFollow(user.id)}
               >
                 {following.some((f) => f.id === user.id) ? "Obunani bekor qilish" : "Obuna bo'lish"}
               </Button>
-            )}
+            )} */}
           </div>
         ))
       ) : (

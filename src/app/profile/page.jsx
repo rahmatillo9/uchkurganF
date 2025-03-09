@@ -8,6 +8,7 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import API from "@/lib/axios";
 import { toast } from "sonner";
+import useAuth from "@/components/useAuth";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function ProfilePage() {
   const [savedPosts, setSavedPosts] = useState([]);
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
-
+  useAuth
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
