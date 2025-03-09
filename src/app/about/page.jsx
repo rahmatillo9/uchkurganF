@@ -68,7 +68,7 @@ export default function AboutPage() {
             <CardContent className="p-6">
               <div className="relative h-[800px] mb-4 rounded-lg overflow-hidden">
                 <Image
-                  src="/butcher.jpg" // O'zingizning rasmingizni qo'yishingiz mumkin
+                  src="/Butcher.jpg" // O'zingizning rasmingizni qo'yishingiz mumkin
                   alt="Developer"
                   fill
                   className="object-cover"
