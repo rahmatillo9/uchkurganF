@@ -20,8 +20,6 @@ const PostCreation = () => {
   const [images, setImages] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-
 
   useAuth
   useEffect(() => {
@@ -118,20 +116,13 @@ const PostCreation = () => {
   };
 
   return (
-    <div className={`flex flex-col min-h-screen w-full ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"} transition-all duration-300`}>
+    <div className="flex flex-col min-h-screen w-full  transition-all duration-300 dark:bg-gray-900">
       {/* Header */}
       <header className="flex justify-between items-center p-4 border-b border-gray-700 w-full">
         <div className="flex items-center gap-2">
           <Camera className="h-8 w-8 text-pink-500" />
           <h1 className="text-xl font-bold">Yangi Post</h1>
         </div>
-        <Button
-          variant="ghost"
-          onClick={() => setDarkMode(!darkMode)}
-          className="rounded-full hover:bg-gray-800 hover:text-pink-500 transition-colors"
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </Button>
       </header>
 
       {/* Forma */}
@@ -141,8 +132,8 @@ const PostCreation = () => {
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             placeholder="Postingiz haqida yozing..."
-            maxLength={255} // Belgilar sonini cheklash
-            className={`w-full h-40 rounded-xl border-2 ${darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200 text-black"} resize-none shadow-lg focus:ring-4 focus:ring-pink-500/50 focus:border-pink-500 transition-all ${caption.length > 255 ? "border-red-500" : ""}`}
+            maxLength={255}
+            className="w-full h-40 rounded-xl border-2  border-gray-200  resize-none shadow-lg focus:ring-4 focus:ring-pink-500/50 focus:border-pink-500 transition-all"
           />
           <div className="text-sm text-gray-500 mt-1">
             {caption.length}/255 belgi
@@ -158,7 +149,7 @@ const PostCreation = () => {
 
       {/* Bottom Sheet */}
       <Sheet open={isBottomSheetOpen} onOpenChange={setIsBottomSheetOpen}>
-        <SheetContent side="bottom" className={`${darkMode ? "bg-gray-800 text-white" : "bg-white text-black"} h-[70vh] rounded-t-3xl shadow-2xl border-t border-gray-700 w-full`}>
+        <SheetContent side="bottom" className=" h-[70vh] rounded-t-3xl shadow-2xl border-t border-gray-700 w-full">
           <SheetTitle className="sr-only">Rasmlar yuklash</SheetTitle>
           <div className="flex flex-col h-full p-6 w-full">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
@@ -177,7 +168,7 @@ const PostCreation = () => {
                   </div>
                 ))}
                 {images.length < 5 && (
-                  <div className={`w-full h-32 rounded-xl border-dashed border-2 ${darkMode ? "border-gray-600" : "border-gray-300"} flex items-center justify-center text-gray-500 hover:border-pink-500 transition-colors`}>
+                  <div className="w-full h-32 rounded-xl border-dashed border-2 border-gray-300 flex items-center justify-center text-gray-500 hover:border-pink-500 transition-colors">
                     <span>+ Rasm</span>
                   </div>
                 )}
