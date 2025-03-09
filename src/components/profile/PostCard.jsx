@@ -2,12 +2,38 @@
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import API from "@/lib/axios";
 
-export default function PostCard({ post, user, handleLike, handleBookmark }) {
+export default function PostCard({ post, user, handleLike, handleBookmark, handleDelete }) {
   const router = useRouter();
 
+  const handleDeleteClick = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this post?");
+    
+    if (confirmed) {
+      try {
+        const response = await API.delete(`/posts/${post.id}`);
+        
+        if (response.data?.success || response.status === 200 || response.status === 204) {
+          // handleDelete mavjud bo'lsa, uni chaqiramiz
+          if (typeof handleDelete === "function") {
+            handleDelete(post.id);
+          } else {
+            console.warn("handleDelete funksiyasi props sifatida berilmagan");
+          }
+        } else {
+          console.error("Failed to delete post:", response.data);
+        }
+      } catch (error) {
+        console.error("Error deleting post:", error.response?.data || error.message);
+      }
+    }
+  }
+
+
+  
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between p-4">
@@ -19,6 +45,17 @@ export default function PostCard({ post, user, handleLike, handleBookmark }) {
             </p>
           </div>
         </div>
+        {/* Add Trash button - only show if user has permission to delete */}
+        {user.id === post.user_id && ( // Assuming post.userId identifies the post owner
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDeleteClick}
+            className="hover:text-red-500"
+          >
+            <Trash className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         <img

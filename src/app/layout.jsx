@@ -19,9 +19,33 @@ export const metadata = {
   title: "Tasvirchi",
   description: "Barchaga o`z qizish rasimini ulashish uchun",
   icons: {
-    icon: '/Logo.webp'
-  }
+    icon: '/bestIkon.webp'
+  },
+
+  openGraph: {
+    title: "Tasvirchi",
+    description: "Tasvirchi haqida batafsil ma'lumot oling!",
+    url: "https://tasvirchi.butcher4.uz",
+    siteName: "Tasvirchi",
+    images: [
+      {
+        url: '/bestIkon.webp',// Sayting rasm yo'lini to'g'ri qo'y
+        width: 1200,
+        height: 630,
+        alt: "Tasvirchi banner",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tasvirchi",
+    description: "Tasvirchi haqida batafsil ma'lumot oling!",
+    images: ['/bestIkon.webp',],
+  },
+  manifest: "/manifest.json",
 };
+
 
 export default function RootLayout({ children }) {
   return (

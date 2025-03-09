@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { Home, Search, PlusSquare,  User, Heart } from "lucide-react"
+import { Home, Search, PlusSquare,  User, Store } from "lucide-react"
 import Link from "next/link"
 
 export default function Footer() {
@@ -12,7 +12,7 @@ export default function Footer() {
     { icon: Home, label: "Bosh sahifa", href: "/" },
     { icon: Search, label: "Qidiruv", href: "/search" },
     { icon: PlusSquare, label: "Post qo`shish", href: "/create" },
-    // { icon: Heart, label: "likes", href: "/likes" },
+    { icon: Store, label: "Haqida", href: "/about" },
     { icon: User, label: "Profile", href: "/profile" },
   ]
 
