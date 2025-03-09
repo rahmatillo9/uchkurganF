@@ -4,7 +4,8 @@ import ThemeProvider from "@/components/theme-provider";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { Toaster } from "@/components/ui/toaster";
 import Footer from "@/components/mobilNavigation";
-import Navbar from "@/components/navbar";
+import Navbar from '../components/navbar';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
