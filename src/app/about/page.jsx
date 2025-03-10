@@ -89,7 +89,7 @@ export default function AboutPage() {
           </Card>
           <div>
             <p className="text-gray-600 dark:text-gray-300">
-              Men bu loyihani yaratishda zamonaviy texnologiyalardan, masalan, Next.js, React va 
+              Men bu loyihani yaratishda zamonaviy texnologiyalardan, masalan, Nest.js, SQL..., Next.js, React va 
               Tailwind CSS dan foydalandim. Maqsadim foydalanuvchilarga tez va ishonchli platforma 
               taqdim etish edi. Agar mening boshqa ishlarim bilan qiziqsangiz, portfolimga tashrif buyuring!
             </p>

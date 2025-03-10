@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/context/SidebarContext";
 import { Toaster } from "@/components/ui/toaster";
 import Footer from "@/components/mobilNavigation";
 import Navbar from "@/components/Navbar";
+import PwaInstallButton from "@/components/PwaInstallButton";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -19,7 +20,7 @@ export const metadata = {
   title: "Tasvirchi",
   description: "Barchaga o`z qizish rasimini ulashish uchun",
   icons: {
-    icon: '/bestIkon.webp'
+    icon: '/bestIkon.png'
   },
 
   openGraph: {
@@ -29,7 +30,7 @@ export const metadata = {
     siteName: "Tasvirchi",
     images: [
       {
-        url: '/bestIkon.webp',// Sayting rasm yo'lini to'g'ri qo'y
+        url: '/bestIkon.png',// Sayting rasm yo'lini to'g'ri qo'y
         width: 1200,
         height: 630,
         alt: "Tasvirchi banner",
@@ -41,7 +42,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Tasvirchi",
     description: "Tasvirchi haqida batafsil ma'lumot oling!",
-    images: ['/bestIkon.webp',],
+    images: ['/bestIkon.png',],
   },
   manifest: "/manifest.json",
 };
@@ -53,6 +54,8 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
+     
+
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -61,6 +64,7 @@ export default function RootLayout({ children }) {
         >
          
           <SidebarProvider>
+          <PwaInstallButton />
             <Navbar/>
             <main className="flex-grow pt-[50px] pb-[60px]">{children}</main>
             <Footer/>
