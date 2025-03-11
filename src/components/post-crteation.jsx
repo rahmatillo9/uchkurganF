@@ -21,7 +21,7 @@ const PostCreation = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
-  useAuth
+  useAuth()
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -32,11 +32,9 @@ const PostCreation = () => {
       } catch (error) {
         console.error("Token dekodlashda xatolik:", error);
         toast.error("Sessiya xatosi. Qayta kiring!");
-        router.push("/login");
+     
       }
-    } else {
-      router.push("/login");
-    }
+    } 
   }, [router]);
 
   const handlePostCreation = async (e) => {

@@ -25,7 +25,7 @@ const PostFeed = () => {
   const router = useRouter()
   
   // Properly call useAuth
- useAuth
+ useAuth()
 
   const { ref, inView } = useInView({
     threshold: 0,

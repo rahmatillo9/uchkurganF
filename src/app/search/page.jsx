@@ -1,9 +1,12 @@
 import PostFeed from '@/components/post-feed';
 import { SearchBar } from '@/components/search';
+import useAuth from '@/components/useAuth';
 import React from 'react';
 
 export default function Page() {
+  useAuth();
   return (
+
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
       {/* Qidiruv paneli uchun yuqori qism */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-md p-4 ">

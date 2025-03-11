@@ -18,7 +18,7 @@ export function SearchBar() {
   const [recentSearches, setRecentSearches] = useState([])
   const [userId, setUserId] = useState(null)
   const [showRecent, setShowRecent] = useState(false)
-  useAuth
+  useAuth()
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {

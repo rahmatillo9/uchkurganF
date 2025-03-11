@@ -28,7 +28,7 @@ export default function SearchPosts() {
 
   const query = searchParams.get("query")
 
- useAuth// Properly call useAuth
+ useAuth()// Properly call useAuth
 
   useEffect(() => {
     const token = localStorage.getItem("token")

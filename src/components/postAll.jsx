@@ -55,10 +55,8 @@ const AllPostsFeed = () => {
         localStorage.setItem("userId", decodedToken.id);
       } catch (error) {
         console.error("Token dekodlashda xatolik:", error);
-        router.push("/login");
+      
       }
-    } else {
-      router.push("/login");
     }
   }, [router]);
 

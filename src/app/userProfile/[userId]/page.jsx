@@ -19,16 +19,14 @@ export default function UserProfilePage() {
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
-  useAuth
+  useAuth()
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       const decodedToken = jwtDecode(token);
       setCurrentUserId(decodedToken.id);
       fetchProfileData(profileUserId, decodedToken.id);
-    } else {
-      router.push("/login");
-    }
+    } 
   }, [router, profileUserId]);
 
   const fetchProfileData = async (profileUserId, currentUserId) => {

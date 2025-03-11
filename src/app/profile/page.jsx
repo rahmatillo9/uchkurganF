@@ -17,7 +17,7 @@ export default function ProfilePage() {
   const [savedPosts, setSavedPosts] = useState([]);
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
-  useAuth
+  useAuth()
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -27,9 +27,7 @@ export default function ProfilePage() {
       fetchSavedPosts(decodedToken.id);
       fetchFollowers(decodedToken.id);
       fetchFollowing(decodedToken.id);
-    } else {
-      router.push("/login");
-    }
+    } 
   }, [router]);
 
   const fetchUserData = async (userId) => {

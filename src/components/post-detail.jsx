@@ -22,7 +22,7 @@ const PostDetail = ({ postId }) => {
   const [isLiked, setIsLiked] = useState(false)
   const router = useRouter()
 
- useAuth
+ useAuth()
 
   useEffect(() => {
     const token = localStorage.getItem("token")
