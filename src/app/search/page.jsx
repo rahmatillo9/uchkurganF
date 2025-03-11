@@ -1,10 +1,10 @@
 import PostFeed from '@/components/post-feed';
 import { SearchBar } from '@/components/search';
-import useAuth from '@/components/useAuth';
+
 import React from 'react';
 
 export default function Page() {
-  useAuth();
+
   return (
 
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
