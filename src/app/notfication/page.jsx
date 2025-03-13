@@ -139,14 +139,14 @@ export default function NotificationsPage() {
     return (
       <div
         key={notification.id}
-        className={`flex items-center space-x-4 p-4 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer ${
-          !notification.is_read ? "bg-blue-50 dark:bg-blue-900/20" : ""
-        }`}
+        className={`flex items-center space-x-4 p-4 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer ${!notification.is_read ? "bg-blue-50 dark:bg-blue-900/20" : ""
+          }`}
         onClick={handleClick}
       >
         <div className="relative">
           <Avatar className="w-12 h-12">
             <AvatarImage
+              className="object-cover w-full h-full"
               src={
                 notification.fromUser?.profile_image
                   ? `${process.env.NEXT_PUBLIC_API_URL}${notification.fromUser.profile_image}`
@@ -154,8 +154,11 @@ export default function NotificationsPage() {
               }
               alt={notification.fromUser?.username}
             />
-            <AvatarFallback>{notification.fromUser?.username?.[0]}</AvatarFallback>
+            <AvatarFallback>
+              {notification.fromUser?.username?.[0]}
+            </AvatarFallback>
           </Avatar>
+
           {notification.type === "like" && (
             <div className="absolute -right-1 -bottom-1 bg-red-500 rounded-full p-1">
               <Heart className="w-3 h-3 text-white fill-current" />
@@ -235,7 +238,7 @@ export default function NotificationsPage() {
             Hech qanday bildirishnoma yo'q
           </div>
         )}
-        
+
         {notifications.today?.length > 0 && (
           <div>
             <h2 className="px-4 py-2 text-sm font-semibold text-gray-500">Bugun</h2>

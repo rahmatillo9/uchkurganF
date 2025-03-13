@@ -72,14 +72,14 @@ export default function PostCard({ post, user, handleLike, handleBookmark, handl
       <CardFooter className="flex flex-col space-y-3 p-4">
         <div className="flex justify-between items-center w-full">
           <div className="flex space-x-4">
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={() => handleLike(post.id)}
               className="hover:text-white"
             >
               <Heart className={post.hasLiked ? "fill-red-500 text-red-500" : ""} />
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="icon"
